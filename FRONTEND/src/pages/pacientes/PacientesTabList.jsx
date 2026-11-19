@@ -17,11 +17,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import EmailIcon from "@mui/icons-material/Email";
 import PhoneIcon from "@mui/icons-material/Phone";
-import { useAuth } from "../../hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 
 export default function PacientesTabList({ items, onDelete }) {
-  const { role } = useAuth();
   const navigate = useNavigate();
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [pacienteToDelete, setPacienteToDelete] = useState(null);

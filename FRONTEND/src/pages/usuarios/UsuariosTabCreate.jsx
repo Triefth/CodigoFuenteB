@@ -65,7 +65,7 @@ export default function UsuariosTabCreate({ onSuccess, onLoad }) {
         formik.resetForm();
         onLoad();
         onSuccess();
-      } catch (error) {
+      } catch {
         // El error ya se maneja en el interceptor
       } finally {
         setLoading(false);

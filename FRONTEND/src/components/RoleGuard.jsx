@@ -25,7 +25,6 @@ export function RequireMedico({ children }) {
 export function RequireAdminOrOwnUser({ children }) {
   const { role, user } = useAuth()
   const { id } = useParams()
-  const location = useLocation()
   
   // Si es administrador, permitir acceso
   if (role === 'admin') return children

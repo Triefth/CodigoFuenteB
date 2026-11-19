@@ -43,6 +43,7 @@ export default function MisResultados() {
             const docsRes = await api.get(`/documentos/examen/${examen.id}`);
             documentosData[examen.id] = docsRes.data || [];
           } catch (error) {
+            console.error("Error al cargar documentos:", error);
             documentosData[examen.id] = [];
           }
         }
@@ -69,6 +70,7 @@ export default function MisResultados() {
       link.click();
       link.remove();
     } catch (error) {
+      console.error("Error al descargar documento:", error);
       toast.error("Error al descargar documento");
     }
   };
