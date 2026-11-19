@@ -11,10 +11,8 @@ RUN npm ci --only=production
 # Copiar código de la aplicación
 COPY src/ ./src/
 COPY sql/ ./sql/
-COPY uploads/ ./uploads/
-
-# Crear directorio para uploads si no existe
-RUN mkdir -p uploads/contracts
+# Crear directorios para uploads
+RUN mkdir -p uploads/contracts uploads/documentos
 
 # Exponer puerto
 EXPOSE 3000
