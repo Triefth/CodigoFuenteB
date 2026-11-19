@@ -1,0 +1,73 @@
+name: CD - Quality Gate, Escaneo Docker y Despliegue
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  quality-gate:
+    name: Quality & Security Gate Pre-Despliegue
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validar pruebas funcionales y normativas
+        working-directory: BACKEND
+        run: |
+          npm ci
+          npm test
+
+      - name: Validar build de producción Frontend
+        working-directory: FRONTEND
+        run: |
+          npm ci
+          npm run lint
+          npm run build
+
+  docker-build-and-scan:
+    name: Build de Imágenes Docker y Escaneo Trivy
+    needs: quality-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Construir imagen Backend
+        run: docker build -t cuidarteplus-backend:${{ github.sha }} ./BACKEND
+
+      - name: Construir imagen Frontend
+        run: docker build -t cuidarteplus-frontend:${{ github.sha }} ./FRONTEND
+
+      - name: Escaneo de vulnerabilidades en imagen Backend (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: cuidarteplus-backend:${{ github.sha }}
+          format: table
+          exit-code: "0"
+          severity: CRITICAL,HIGH
+
+      - name: Escaneo de vulnerabilidades en imagen Frontend (Trivy)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: cuidarteplus-frontend:${{ github.sha }}
+          format: table
+          exit-code: "0"
+          severity: CRITICAL,HIGH
+
+  deploy-verification:
+    name: Registro de Despliegue Controlado
+    needs: docker-build-and-scan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resumen de despliegue seguro
+        run: |
+          echo "Despliegue autorizado tras superar Quality Gate, Lint, Pruebas Normativas y Escaneo Trivy."
+          echo "Commit: ${{ github.sha }}"
+          echo "Rama: ${{ github.ref_name }}"

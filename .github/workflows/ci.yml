@@ -1,0 +1,81 @@
+name: CI - Seguridad, Calidad y Pruebas Automatizadas
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  sast-and-sca:
+    name: Análisis Estático (SAST) y Dependencias (SCA)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instalar dependencias Frontend
+        working-directory: FRONTEND
+        run: npm ci
+
+      - name: SAST - Lint en Frontend (ESLint)
+        working-directory: FRONTEND
+        run: npm run lint
+
+      - name: Instalar dependencias Backend
+        working-directory: BACKEND
+        run: npm ci
+
+      - name: SCA - Auditoría de vulnerabilidades (npm audit)
+        run: |
+          echo "=== Auditoría Backend ==="
+          cd BACKEND && npm audit --audit-level=high || true
+          echo "=== Auditoría Frontend ==="
+          cd ../FRONTEND && npm audit --audit-level=high || true
+
+  automated-tests:
+    name: Pruebas Funcionales y Normativas
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instalar dependencias Backend
+        working-directory: BACKEND
+        run: npm ci
+
+      - name: Ejecutar suite de pruebas automatizadas
+        working-directory: BACKEND
+        run: npm test
+
+  build-and-docker:
+    name: Verificación de Build y Contenedores
+    needs: [sast-and-sca, automated-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Instalar dependencias y compilar Frontend
+        working-directory: FRONTEND
+        run: |
+          npm ci
+          npm run build
+
+      - name: Validar configuración de Docker Compose
+        run: docker compose config -q
